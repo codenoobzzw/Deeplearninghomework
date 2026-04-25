@@ -1,39 +1,88 @@
-# EuroSAT MLP 作业代码（NumPy + 自定义自动微分）
+# EuroSAT MLP 图像分类实验
 
-这是一个按作业要求实现的从零开始版本：
+本仓库是我在深度学习课程作业中完成的 EuroSAT 遥感图像分类实验。作业要求不使用 PyTorch、TensorFlow、JAX 等深度学习框架，因此我主要使用 NumPy 从较底层实现了多层感知机、自动微分、反向传播、优化器、训练流程和测试评估流程。
 
-- **不使用 PyTorch / TensorFlow / JAX**；
-- 使用 **NumPy** 做矩阵运算；
-- 手写 **自动微分与反向传播**；
-- 支持 **SGD、学习率衰减、交叉熵、L2 正则**；
-- 支持 **训练 / 验证 / 测试划分、最佳模型保存、超参数搜索、混淆矩阵、权重可视化、错例分析**。
+这个项目的目标不是追求一个很复杂的深度网络，而是通过一个相对完整的 MLP 分类器，把前向传播、损失函数、反向传播、参数更新、正则化、学习率衰减、模型保存和实验分析这些基本环节真正串起来。代码和报告中的实验结果都基于 EuroSAT RGB 数据集完成。
 
-> 按作业口径，默认推荐使用 **三层 MLP：输入层 -> 1 个隐藏层 -> 输出层**。  
-> 代码里 `--hidden-dims` 也支持写成 `512,256` 这种多隐藏层形式，方便你自己做额外实验；但如果你想和题目保持最一致，直接用单个隐藏层即可，比如 `--hidden-dims 512`。
+## 1. 实验内容概述
 
----
+本次实验完成了以下几部分工作：
 
-## 1. 环境依赖
+- 使用 EuroSAT RGB 数据集进行 10 类遥感场景分类。
+- 使用 NumPy 实现全连接神经网络，不依赖深度学习框架。
+- 自己实现简单的自动微分机制，并通过计算图完成反向传播。
+- 实现线性层、ReLU、Sigmoid、Tanh、Dropout、Softmax Cross Entropy 等模块。
+- 使用 SGD with Momentum 进行优化，并加入学习率衰减和 L2 正则化。
+- 将数据集划分为训练集、验证集和测试集，使用验证集选择最佳模型。
+- 在测试集上输出 Accuracy、Confusion Matrix 和错分样例。
+- 对第一层权重进行可视化，观察 MLP 从原始图像中学习到的低层模式。
+- 进行网格超参数搜索，对比学习率、隐藏层维度、激活函数和正则化强度的影响。
 
-建议 Python 3.10+。
+## 2. 仓库结构
 
-安装依赖：
+```text
+.
+├── train.py                         # 训练入口，保存 best/last checkpoint 和训练曲线
+├── evaluate.py                      # 测试集评估入口，输出测试指标、混淆矩阵和错例图
+├── visualize.py                     # 第一层权重可视化入口
+├── search.py                        # 超参数搜索入口
+├── configs/
+│   ├── grid_search.json             # 网格搜索配置
+│   └── random_search.json           # 随机搜索配置
+├── src/
+│   ├── autograd.py                  # 自动微分和计算图
+│   ├── nn.py                        # 网络层、激活函数、损失函数等
+│   ├── optim.py                     # SGD、Momentum、学习率衰减、L2 正则
+│   ├── data.py                      # EuroSAT 数据读取、划分、增强和 batch 生成
+│   ├── trainer.py                   # 训练循环、验证、早停和模型保存
+│   ├── metrics.py                   # Accuracy、混淆矩阵等指标
+│   ├── checkpoint.py                # 权重保存与加载
+│   ├── searcher.py                  # 超参数搜索流程
+│   ├── visualization.py             # 训练曲线、混淆矩阵、权重和错例可视化
+│   └── utils.py                     # 随机种子、JSON/CSV 保存等工具函数
+├── output/train_run_final/
+│   ├── best/weights.npz             # 验证集表现最好的模型权重
+│   ├── best/meta.json               # best checkpoint 的模型和训练信息
+│   ├── last/weights.npz             # 最后一轮模型权重
+│   └── last/meta.json               # last checkpoint 的模型和训练信息
+├── baogao/
+│   ├── main.tex                     # 作业报告 LaTeX 源文件
+│   ├── figures/                     # 报告中使用的实验图片
+│   └── data/                        # 报告中引用的实验数据
+├── tools/make_dummy_dataset.py      # 小规模假数据集生成脚本，用于冒烟测试
+├── requirements.txt
+└── README.md
+```
+
+说明：完整训练过程产生的中间输出比较多，`.gitignore` 默认忽略 `output/`，但我已经把最终 `best` 和 `last` 两份权重文件单独提交到仓库中，便于复现实验结果。
+
+## 3. 环境配置
+
+我实验时使用的是 Python 3.x 环境，主要依赖如下：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-本项目依赖非常少：
+`requirements.txt` 中只包含：
 
-- numpy
-- pillow
-- matplotlib
+```text
+numpy
+Pillow
+matplotlib
+```
 
----
+本项目不需要安装 PyTorch、TensorFlow 或 JAX。
 
-## 2. 数据集目录结构
+## 4. 数据集准备
 
-你的数据集根目录应该类似这样：
+代码默认读取 EuroSAT RGB 原始图片目录。我的本地数据集路径为：
+
+```text
+/home/zhangzhiwei/deeplearning/homework1/EuroSAT_RGB
+```
+
+目录结构需要保持为按类别分文件夹的形式：
 
 ```text
 EuroSAT_RGB/
@@ -49,18 +98,18 @@ EuroSAT_RGB/
 └── SeaLake/
 ```
 
-每个类别文件夹里直接放图片即可。
+如果在其他机器上运行，只需要把命令中的 `--data-root` 改成自己的 EuroSAT RGB 数据集路径即可。
 
----
+## 5. 复现实验命令
 
-## 3. 训练
+下面这些命令是我最终实验使用的主要流程。建议在仓库根目录下运行。
 
-### 3.1 最常用训练命令
+### 5.1 训练模型
 
 ```bash
 python train.py \
   --data-root /home/zhangzhiwei/deeplearning/homework1/EuroSAT_RGB \
-  --output-dir /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_run_1 \
+  --output-dir /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_run_final \
   --hidden-dims 512 \
   --activation relu \
   --dropout 0.2 \
@@ -75,315 +124,177 @@ python train.py \
   --seed 42
 ```
 
-### 3.2 如果你想额外试多隐藏层
-
-```bash
-python train.py \
-  --data-root /home/zhangzhiwei/deeplearning/homework1/EuroSAT_RGB \
-  --output-dir /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_deeper \
-  --hidden-dims 512,256 \
-  --activation relu \
-  --dropout 0.2 \
-  --learning-rate 0.01 \
-  --momentum 0.9 \
-  --lr-decay 0.98 \
-  --weight-decay 0.0005 \
-  --max-grad-norm 5.0 \
-  --early-stopping-patience 6 \
-  --batch-size 128 \
-  --epochs 30 \
-  --seed 42
-```
-
-### 3.3 训练输出内容
-
-训练结束后，`output-dir` 下会有：
+训练结束后会保存：
 
 ```text
-outputs/train_run_1/
-├── accuracy_curve.png
-├── loss_curve.png
-├── lr_curve.png
-├── history.csv
-├── history.json
-├── experiment_config.json
-├── split.json
-├── training_summary.json
-├── best/
-│   ├── meta.json
-│   └── weights.npz
-└── last/
-    ├── meta.json
-    └── weights.npz
+output/train_run_final/best/weights.npz
+output/train_run_final/last/weights.npz
+output/train_run_final/history.csv
+output/train_run_final/loss_curve.png
+output/train_run_final/accuracy_curve.png
+output/train_run_final/training_summary.json
 ```
 
-其中：
-
-- `best/`：验证集准确率最高时保存的模型；
-- `split.json`：训练/验证/测试划分，后续评估时要复用它；
-- `loss_curve.png`：训练集/验证集 loss 曲线；
-- `accuracy_curve.png`：准确率曲线；
-- `history.csv`：每个 epoch 的日志。
-
----
-
-## 4. 测试集评估
-
-使用训练好的最优模型在测试集上评估：
+### 5.2 测试集评估
 
 ```bash
 python evaluate.py \
   --data-root /home/zhangzhiwei/deeplearning/homework1/EuroSAT_RGB \
-  --checkpoint-dir /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_run_1/best \
-  --split-file /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_run_1/split.json \
-  --output-dir /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/eval_run_1
+  --checkpoint-dir /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_run_final/best \
+  --split-file /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_run_final/split.json \
+  --output-dir /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/eval_run_final
 ```
 
-评估输出：
+评估结果会保存到：
 
 ```text
-outputs/eval_run_1/
-├── confusion_matrix.png
-├── misclassified_examples.png
-├── predictions.csv
-└── test_metrics.json
+output/eval_run_final/test_metrics.json
+output/eval_run_final/confusion_matrix.png
+output/eval_run_final/misclassified_examples.png
+output/eval_run_final/predictions.csv
 ```
 
-其中：
-
-- `confusion_matrix.png`：混淆矩阵图；
-- `misclassified_examples.png`：测试集错例图；
-- `predictions.csv`：每张测试图像的真实类别/预测类别；
-- `test_metrics.json`：测试集 accuracy、每类 accuracy、混淆矩阵等。
-
----
-
-## 5. 第一层权重可视化
+### 5.3 第一层权重可视化
 
 ```bash
 python visualize.py \
-  --checkpoint-dir outputs/train_run_1/best \
-  --output-dir outputs/vis_run_1 \
+  --checkpoint-dir /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_run_final/best \
+  --output-dir /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/vis_run_final \
   --max-filters 64 \
   --cols 8
 ```
 
-输出文件：
+输出文件为：
 
 ```text
-outputs/vis_run_1/
-└── first_layer_weights.png
+output/vis_run_final/first_layer_weights.png
 ```
 
-这个图就是你写报告时“第一层隐藏层权重恢复成图像后”的可视化结果。
-
----
-
-## 6. 超参数搜索
-
-### 6.1 网格搜索
+### 5.4 超参数搜索
 
 ```bash
 python search.py \
-  --data-root /path/to/EuroSAT_RGB \
-  --output-dir outputs/search_grid \
-  --search-config configs/grid_search.json \
+  --data-root /home/zhangzhiwei/deeplearning/homework1/EuroSAT_RGB \
+  --output-dir /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/search_grid_final \
+  --search-config /home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/configs/grid_search.json \
   --seed 42
 ```
 
-### 6.2 随机搜索
-
-```bash
-python search.py \
-  --data-root /path/to/EuroSAT_RGB \
-  --output-dir outputs/search_random \
-  --search-config configs/random_search.json \
-  --seed 42
-```
-
-### 6.3 搜索结果
-
-搜索目录里会保存：
+搜索结果主要保存在：
 
 ```text
-outputs/search_grid/
-├── best_trial.json
-├── dataset_info.json
-├── search_results.csv
-├── search_results.json
-├── split.json
-└── trial_xxx_.../
+output/search_grid_final/search_results.csv
+output/search_grid_final/best_trial.json
 ```
 
-`search_results.csv` 里会记录不同超参数组合的验证集性能，适合直接拿去写实验对比。
+## 6. 最终实验结果
 
----
-
-## 7. 主要参数说明
-
-### train.py
-
-- `--hidden-dims`：隐藏层大小，例：`512` 或 `512,256`
-- `--activation`：`relu` / `sigmoid` / `tanh`
-- `--dropout`：隐藏层 dropout 概率（仅训练时生效）
-- `--learning-rate`：初始学习率
-- `--momentum`：SGD 动量系数
-- `--lr-decay`：每个 epoch 后乘上的衰减系数
-- `--weight-decay`：L2 正则系数
-- `--max-grad-norm`：全局梯度裁剪阈值，防止梯度爆炸
-- `--disable-train-augmentation`：关闭训练集数据增强（默认开启翻转+90度旋转）
-- `--early-stopping-patience`：验证集准确率无提升时提前停止训练
-- `--batch-size`：批大小
-- `--epochs`：训练轮数
-- `--cache-images`：将图像缓存到内存，训练更快，但更吃 RAM
-
-### search.py
-
-- `--search-config`：搜索配置 JSON
-- `--max-trials`：只跑前 N 个 trial，适合调试
-
-### evaluate.py
-
-- `--max-error-examples`：错例分析图里最多显示多少张
-
----
-
-## 8. Linux 上怎么跑
-
-假设你的工程目录叫 `eurosat_mlp_hw`，数据集在 `/data/EuroSAT_RGB`：
-
-```bash
-cd eurosat_mlp_hw
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-然后训练：
-
-```bash
-python train.py \
-  --data-root /data/EuroSAT_RGB \
-  --output-dir outputs/train_relu_512 \
-  --hidden-dims 512 \
-  --activation relu \
-  --dropout 0.2 \
-  --learning-rate 0.01 \
-  --momentum 0.9 \
-  --lr-decay 0.98 \
-  --weight-decay 0.0005 \
-  --max-grad-norm 5.0 \
-  --early-stopping-patience 6 \
-  --batch-size 128 \
-  --epochs 30 \
-  --seed 42
-```
-
-训练完评估：
-
-```bash
-python evaluate.py \
-  --data-root /data/EuroSAT_RGB \
-  --checkpoint-dir outputs/train_relu_512/best \
-  --split-file outputs/train_relu_512/split.json \
-  --output-dir outputs/eval_relu_512
-```
-
-再做权重可视化：
-
-```bash
-python visualize.py \
-  --checkpoint-dir outputs/train_relu_512/best \
-  --output-dir outputs/vis_relu_512
-```
-
----
-
-## 9. GPU 说明
-
-这份实现是 **纯 NumPy**，默认走 **CPU**。
-
-也就是说：
-
-- 你有 GPU 也没关系；
-- 这份代码本身 **不依赖 GPU**；
-- 不需要装 CUDA，也不需要装 PyTorch。
-
-这样做的好处是和作业要求最一致，环境也最稳。  
-如果你的 CPU 还可以，EuroSAT 这个作业是能跑起来的。为了提速，你可以：
-
-- 打开 `--cache-images`
-- 先用较小 epoch 做超参数搜索
-- 搜到较优参数后再正式训练更久一点
-
----
-
-## 10. 代码结构
+最终模型使用的主要配置如下：
 
 ```text
-.
-├── train.py
-├── search.py
-├── evaluate.py
-├── visualize.py
-├── configs/
-│   ├── grid_search.json
-│   └── random_search.json
-├── src/
-│   ├── autograd.py
-│   ├── checkpoint.py
-│   ├── data.py
-│   ├── metrics.py
-│   ├── nn.py
-│   ├── optim.py
-│   ├── searcher.py
-│   ├── trainer.py
-│   ├── utils.py
-│   └── visualization.py
-└── tools/
-    └── make_dummy_dataset.py
+输入维度: 64 x 64 x 3 = 12288
+隐藏层: 512
+激活函数: ReLU
+Dropout: 0.2
+优化器: SGD with Momentum
+初始学习率: 0.01
+Momentum: 0.9
+学习率衰减: 0.98
+L2 正则系数: 0.0005
+Batch size: 128
+随机种子: 42
+数据划分: train 70%, val 15%, test 15%
 ```
 
-模块对应作业要求：
+主要结果如下：
 
-- 数据加载与预处理：`src/data.py`
-- 模型定义：`src/nn.py`
-- 自动微分与反向传播：`src/autograd.py`
-- 训练循环：`src/trainer.py`
-- 测试评估：`evaluate.py` + `src/metrics.py`
-- 超参数查找：`search.py` + `src/searcher.py`
+```text
+最佳验证集准确率: 67.01%
+最佳 epoch: 20
+测试集准确率: 66.67%
+测试集样本数: 4050
+测试集 loss: 0.9516
+```
 
----
+每个类别在测试集上的准确率如下：
 
-## 11. 一个最小自测方法（可选）
+| 类别 | Accuracy |
+| --- | ---: |
+| AnnualCrop | 55.33% |
+| Forest | 81.56% |
+| HerbaceousVegetation | 68.44% |
+| Highway | 35.47% |
+| Industrial | 85.60% |
+| Pasture | 82.67% |
+| PermanentCrop | 52.80% |
+| Residential | 78.22% |
+| River | 53.60% |
+| SeaLake | 71.78% |
 
-如果你只是想先验证环境能不能跑通，可以生成一个假数据集：
+从结果上看，Industrial、Pasture、Forest 和 Residential 的识别效果相对较好；Highway、PermanentCrop、River 等类别更容易和外观相近的类别混淆。这也符合我在错分样例和混淆矩阵中观察到的现象：只使用 MLP 对图像拉平成向量后分类，空间结构信息保留得不充分，因此对于纹理和布局相近的遥感场景会比较吃力。
+
+## 7. 超参数搜索结果
+
+我使用 `configs/grid_search.json` 做了网格搜索，主要比较了学习率、隐藏层维度、激活函数和 L2 正则强度。搜索范围为：
+
+```text
+learning_rate: 0.1, 0.05, 0.01
+hidden_dims: [256], [512]
+activation: relu, tanh
+weight_decay: 0.0, 0.0005
+```
+
+搜索中表现最好的组合为：
+
+```text
+hidden_dims: [512]
+activation: relu
+learning_rate: 0.01
+weight_decay: 0.0
+best_val_accuracy: 65.43%
+best_epoch: 19
+```
+
+最终正式训练时，我在这个结果的基础上保留了 `hidden_dims=512`、`activation=relu`、`learning_rate=0.01`，并使用 `weight_decay=0.0005` 做轻微正则化，主要是为了在最终训练中增强一点泛化约束。
+
+## 8. 报告文件
+
+作业报告已经整理在 `baogao/` 目录中：
+
+```text
+baogao/main.tex
+baogao/figures/
+baogao/data/
+```
+
+可以将整个 `baogao/` 文件夹上传到 Overleaf，然后编译 `main.tex`。报告中使用的训练曲线、混淆矩阵、错分样例和第一层权重可视化图片都已经放在 `baogao/figures/` 中。
+
+## 9. 已提交的模型权重
+
+仓库中已经包含最终训练的两份权重：
+
+```text
+output/train_run_final/best/weights.npz
+output/train_run_final/last/weights.npz
+```
+
+其中 `best` 是验证集准确率最高时保存的模型，通常用于测试集评估和报告结果；`last` 是训练停止时最后一轮模型，主要用于对照和备份。
+
+## 10. 简单自检命令
+
+如果只想确认脚本入口是否可用，可以运行：
 
 ```bash
-python tools/make_dummy_dataset.py --output-dir ./dummy_eurosat
+python train.py --help
+python evaluate.py --help
+python visualize.py --help
+python search.py --help
 ```
 
-然后：
+如果没有真实数据集，也可以先用 `tools/make_dummy_dataset.py` 生成一个很小的假数据集，检查训练、评估和可视化流程是否能跑通。
 
-```bash
-python train.py --data-root ./dummy_eurosat --output-dir ./outputs/dummy_run --epochs 2 --hidden-dims 64
-```
+## 11. 我的实验理解
 
-这只是用于检查代码通不通，不代表真实实验结果。
+这次实验对我来说比较重要的一点是，MLP 本身结构并不复杂，但是把训练系统完整写出来并不只是搭几层线性层。数据读取、归一化、随机划分、mini-batch、前向传播、loss 计算、反向传播、优化器更新、学习率衰减、早停、checkpoint 保存、评估和可视化都需要互相配合。
 
----
-
-## 12. 交作业建议
-
-你最后整理报告时，建议至少把这些内容放进去：
-
-1. 模型结构与自动微分实现思路；
-2. 数据划分与预处理方式；
-3. 训练/验证 loss 曲线；
-4. 验证集 accuracy 曲线；
-5. 超参数搜索表格；
-6. 测试集 accuracy 与 confusion matrix；
-7. 第一层权重可视化；
-8. 错例分析；
-9. GitHub Repo 链接；
-10. 模型权重下载链接。
+从最终结果看，MLP 在 EuroSAT 上可以学到一定的类别区分能力，但准确率明显受到模型结构限制。遥感图像中很多类别的差异依赖局部纹理和空间布局，而 MLP 会直接把图像展平成一维向量，天然缺少卷积网络那种局部感受野和平移不变性。因此我认为这个结果是合理的：它能作为理解反向传播和训练流程的基础模型，但如果追求更高精度，更适合使用 CNN 或其他能够建模空间结构的网络。
