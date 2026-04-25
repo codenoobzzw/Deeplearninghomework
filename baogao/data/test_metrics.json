@@ -1,0 +1,142 @@
+{
+  "test_loss": 0.9516074950312391,
+  "test_accuracy": 0.6666666666666666,
+  "num_test_samples": 4050,
+  "confusion_matrix": [
+    [
+      249,
+      0,
+      51,
+      20,
+      1,
+      20,
+      58,
+      17,
+      26,
+      8
+    ],
+    [
+      0,
+      367,
+      6,
+      0,
+      0,
+      48,
+      0,
+      0,
+      0,
+      29
+    ],
+    [
+      7,
+      3,
+      308,
+      16,
+      4,
+      8,
+      47,
+      39,
+      14,
+      4
+    ],
+    [
+      35,
+      2,
+      57,
+      133,
+      17,
+      25,
+      24,
+      28,
+      52,
+      2
+    ],
+    [
+      1,
+      0,
+      14,
+      3,
+      321,
+      0,
+      2,
+      33,
+      1,
+      0
+    ],
+    [
+      5,
+      11,
+      20,
+      5,
+      0,
+      248,
+      2,
+      1,
+      2,
+      6
+    ],
+    [
+      33,
+      0,
+      91,
+      11,
+      2,
+      11,
+      198,
+      20,
+      8,
+      1
+    ],
+    [
+      0,
+      1,
+      38,
+      17,
+      17,
+      1,
+      14,
+      352,
+      10,
+      0
+    ],
+    [
+      23,
+      5,
+      17,
+      86,
+      10,
+      17,
+      4,
+      2,
+      201,
+      10
+    ],
+    [
+      2,
+      74,
+      7,
+      3,
+      0,
+      24,
+      3,
+      8,
+      6,
+      323
+    ]
+  ],
+  "per_class_accuracy": {
+    "AnnualCrop": 0.5533333420753479,
+    "Forest": 0.8155555725097656,
+    "HerbaceousVegetation": 0.6844444274902344,
+    "Highway": 0.35466668009757996,
+    "Industrial": 0.8560000061988831,
+    "Pasture": 0.8266666531562805,
+    "PermanentCrop": 0.527999997138977,
+    "Residential": 0.7822222113609314,
+    "River": 0.5360000133514404,
+    "SeaLake": 0.7177777886390686
+  },
+  "num_errors_visualized": 16,
+  "checkpoint_dir": "/home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_run_final/best",
+  "split_file": "/home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_run_final/split.json"
+}

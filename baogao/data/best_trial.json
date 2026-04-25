@@ -1,0 +1,23 @@
+{
+  "trial_index": 21,
+  "trial_name": "trial_021__learning_rate-0.01__hidden_dims-512__activation-relu__weight_decay-0",
+  "best_val_accuracy": 0.654320987654321,
+  "best_epoch": 19,
+  "best_checkpoint_dir": "/home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/search_grid_final/trial_021__learning_rate-0.01__hidden_dims-512__activation-relu__weight_decay-0/best",
+  "hidden_dims": "[512]",
+  "activation": "relu",
+  "dropout": 0.2,
+  "learning_rate": 0.01,
+  "momentum": 0.9,
+  "lr_decay": 0.98,
+  "weight_decay": 0.0,
+  "max_grad_norm": 5.0,
+  "use_train_augmentation": true,
+  "train_hflip_prob": 0.5,
+  "train_vflip_prob": 0.5,
+  "train_rotate_prob": 0.5,
+  "early_stopping_patience": 6,
+  "early_stopping_min_delta": 0.0001,
+  "epochs": 20,
+  "batch_size": 128
+}

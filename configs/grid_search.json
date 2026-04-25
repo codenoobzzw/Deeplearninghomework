@@ -1,0 +1,19 @@
+{
+  "search_type": "grid",
+  "base_config": {
+    "epochs": 20,
+    "batch_size": 128,
+    "lr_decay": 0.98,
+    "momentum": 0.9,
+    "max_grad_norm": 5.0,
+    "dropout": 0.2,
+    "use_train_augmentation": true,
+    "early_stopping_patience": 6
+  },
+  "param_space": {
+    "learning_rate": [0.1, 0.05, 0.01],
+    "hidden_dims": [[256], [512]],
+    "activation": ["relu", "tanh"],
+    "weight_decay": [0.0, 0.0005]
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "data_root": "/home/zhangzhiwei/deeplearning/homework1/EuroSAT_RGB",
+  "output_dir": "/home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_run_final",
+  "split_file": "/home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_run_final/split.json",
+  "split_sizes": {
+    "train": 18900,
+    "val": 4050,
+    "test": 4050
+  },
+  "class_names": [
+    "AnnualCrop",
+    "Forest",
+    "HerbaceousVegetation",
+    "Highway",
+    "Industrial",
+    "Pasture",
+    "PermanentCrop",
+    "Residential",
+    "River",
+    "SeaLake"
+  ],
+  "input_shape": [
+    64,
+    64,
+    3
+  ],
+  "normalization": {
+    "mean": [
+      0.34447625279426575,
+      0.3802903890609741,
+      0.40785086154937744
+    ],
+    "std": [
+      0.20264068245887756,
+      0.13672709465026855,
+      0.11550247669219971
+    ]
+  },
+  "model": {
+    "input_dim": 12288,
+    "hidden_dims": [
+      512
+    ],
+    "num_classes": 10,
+    "activation": "relu",
+    "dropout": 0.2
+  },
+  "training_config": {
+    "data_root": "/home/zhangzhiwei/deeplearning/homework1/EuroSAT_RGB",
+    "output_dir": "/home/zhangzhiwei/deeplearning/homework1/eurosat_mlp_hw/output/train_run_final",
+    "split_file": null,
+    "hidden_dims": "512",
+    "activation": "relu",
+    "dropout": 0.2,
+    "learning_rate": 0.01,
+    "momentum": 0.9,
+    "lr_decay": 0.98,
+    "weight_decay": 0.0005,
+    "max_grad_norm": 5.0,
+    "disable_train_augmentation": false,
+    "train_hflip_prob": 0.5,
+    "train_vflip_prob": 0.5,
+    "train_rotate_prob": 0.5,
+    "early_stopping_patience": 6,
+    "early_stopping_min_delta": 0.0001,
+    "batch_size": 128,
+    "epochs": 30,
+    "seed": 42,
+    "train_ratio": 0.7,
+    "val_ratio": 0.15,
+    "test_ratio": 0.15,
+    "cache_images": false,
+    "image_size": null,
+    "include_bias_in_weight_decay": false
+  }
+}

@@ -1,0 +1,1 @@
+"""EuroSAT MLP homework package."""

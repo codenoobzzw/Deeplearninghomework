@@ -1,0 +1,34 @@
+{
+  "search_type": "random",
+  "num_trials": 10,
+  "base_config": {
+    "epochs": 20,
+    "batch_size": 128,
+    "lr_decay": 0.98,
+    "momentum": 0.9,
+    "max_grad_norm": 5.0,
+    "dropout": 0.2,
+    "use_train_augmentation": true,
+    "early_stopping_patience": 6
+  },
+  "param_space": {
+    "learning_rate": {
+      "type": "log_uniform",
+      "low": 0.001,
+      "high": 0.1
+    },
+    "hidden_dims": {
+      "type": "choice",
+      "values": [[256], [512], [1024]]
+    },
+    "activation": {
+      "type": "choice",
+      "values": ["relu", "tanh", "sigmoid"]
+    },
+    "weight_decay": {
+      "type": "log_uniform",
+      "low": 1e-06,
+      "high": 0.001
+    }
+  }
+}
